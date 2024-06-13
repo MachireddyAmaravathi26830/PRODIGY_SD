@@ -1,0 +1,79 @@
+import java.util.Scanner;
+
+public class SudokuSolver {
+
+    public static void solveSudoku(int[][] board) {
+        if (board == null || board.length == 0)
+            return;
+        solve(board);
+    }
+
+    private static boolean solve(int[][] board) {
+        for (int row = 0; row < board.length; row++) {
+            for (int col = 0; col < board[row].length; col++) {
+                if (board[row][col] == 0) { // Find an empty cell
+                    for (int num = 1; num <= 9; num++) { 
+                        
+         // Try all numbers from 1 to 9
+        if (isValid(board, row, col, num)) {
+                            board[row][col] = num; 
+                            // Place the number
+                            if (solve(board))
+                             // Recursively try to solve the rest of the board
+                                return true;
+                            board[row][col] = 0;
+                            
+                            // Reset the cell if no solution is found
+                        }
+                    }
+                    return false;
+                     // Return false if no number can be placed in the current empty cell
+                }
+            }
+        }
+        return true; // Return true if the entire board is successfully filled
+    }
+
+    private static boolean isValid(int[][] board, int row, int col, int num) {
+        for (int i = 0; i < 9; i++) {
+            if (board[row][i] == num || board[i][col] == num || 
+                board[3 * (row / 3) + i / 3][3 * (col / 3) + i % 3] == num)
+                return false; // Return false if the number already exists in the row, column, or 3x3 sub-grid
+        }
+        return true; // Return true if the number can be placed in the cell
+    }
+
+    public static void printBoard(int[][] board) {
+        for (int i = 0; i < 9; i++) {
+            for (int j = 0; j < 9; j++) {
+                System.out.print(board[i][j] + " ");
+            }
+            System.out.println();
+        }
+    }
+
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+        int[][] board = new int[9][9];
+
+        System.out.println("Enter the Sudoku puzzle (use 0 for empty cells):");
+        for (int i = 0; i < 9; i++) {
+            for (int j = 0; j < 9; j++) {
+                board[i][j] = scanner.nextInt();
+            }
+        }
+
+        System.out.println("Sudoku puzzle:");
+        printBoard(board);
+        System.out.println("\nSolving...\n");
+
+        if (solve(board)) {
+            System.out.println("Sudoku puzzle solved:");
+            printBoard(board);
+        } else {
+            System.out.println("No solution exists.");
+        }
+
+        scanner.close();
+    }
+}

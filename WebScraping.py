@@ -1,0 +1,54 @@
+import requests
+from bs4 import BeautifulSoup
+import csv
+
+def fetch_page_content(url):
+    response = requests.get(url)
+    if response.status_code == 200:
+        return BeautifulSoup(response.content, 'html.parser')
+    else:
+        print(f"Failed to retrieve data. Status code: {response.status_code}")
+        return None
+
+def extract_product_info(product_element):
+    name = product_element.h3.a['title']
+    price = product_element.find('p', class_='price_color').text
+    availability = product_element.find('p', class_='availability').text.strip()
+    return {
+        'Name': name,
+        'Price': price,
+        'Availability': availability
+    }
+
+def scrape_first_10_pages(base_url):
+    product_info_list = []
+    for page_number in range(1, 11):
+        url = f"{base_url}catalogue/page-{page_number}.html"
+        print(f"Scraping page: {page_number}")
+        soup = fetch_page_content(url)
+        if soup is None or not soup.select('.product_pod'):
+            break
+        
+        product_elements = soup.select('.product_pod')
+        for product_element in product_elements:
+            product_info = extract_product_info(product_element)
+            product_info_list.append(product_info)
+    
+    return product_info_list
+
+def save_to_csv(data, filename='product_info.csv'):
+    with open(filename, 'w', newline='') as csvfile:
+        fieldnames = ['Name', 'Price', 'Availability']
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+        writer.writeheader()
+        for row in data:
+            writer.writerow(row)
+
+if __name__ == "__main__":
+    base_url = 'http://books.toscrape.com/'
+    product_data = scrape_first_10_pages(base_url)
+    if product_data:
+        save_to_csv(product_data)
+        print("Data successfully extracted and saved to 'product_info.csv'")
+    else:
+        print("Extraction failed.")
